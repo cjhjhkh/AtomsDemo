@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-const apiKey = process.env.QWEN_API_KEY || '';
 
-const openai = new OpenAI({
-  apiKey: apiKey,
-  baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-});
 
 export async function POST(req: NextRequest) {
   try {
+    const apiKey = process.env.QWEN_API_KEY || '';
+
     if (!apiKey) {
       return NextResponse.json(
         { error: 'Qwen API key is not configured' },
         { status: 500 }
       );
     }
-
+    const openai = new OpenAI({
+      apiKey: apiKey,
+      baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    });
+    
     const { messages } = await req.json();
     
     // 映射全部历史消息，支持在上下文中"Remix"
