@@ -1,0 +1,34 @@
+Starting...
+API Error details: APIError: 402 Insufficient Balance
+    at APIError.generate (/Users/chammy/Desktop/AtomsDemo/atoms-demo/node_modules/openai/core/error.js:68:16)
+    at OpenAI.makeStatusError (/Users/chammy/Desktop/AtomsDemo/atoms-demo/node_modules/openai/client.js:258:32)
+    at OpenAI.makeRequest (/Users/chammy/Desktop/AtomsDemo/atoms-demo/node_modules/openai/client.js:449:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async run (/Users/chammy/Desktop/AtomsDemo/atoms-demo/test-ds2.js:9:17) {
+  status: 402,
+  headers: Headers {
+    server: 'openresty',
+    'content-type': 'application/json',
+    vary: 'origin, access-control-request-method, access-control-request-headers',
+    'access-control-allow-credentials': 'true',
+    'x-ds-trace-id': 'fad241f1d4a367562a7bf4510393fc8c',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    'x-content-type-options': 'nosniff',
+    age: '0',
+    'content-length': '111',
+    connection: 'keep-alive',
+    date: 'Fri, 15 May 2026 20:12:08 GMT',
+    'eo-log-uuid': '7788406798625185298',
+    'eo-cache-status': 'MISS'
+  },
+  requestID: null,
+  error: {
+    message: 'Insufficient Balance',
+    type: 'unknown_error',
+    param: null,
+    code: 'invalid_request_error'
+  },
+  code: 'invalid_request_error',
+  param: null,
+  type: 'unknown_error'
+}
