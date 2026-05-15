@@ -14,9 +14,14 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { useStore } from '@/lib/store/use-store'
+interface AuthDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
-export function AuthDialog() {
-  const { isAuthOpen, setIsAuthOpen } = useStore()
+export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
+  const isAuthOpen = open
+  const setIsAuthOpen = onOpenChange
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
