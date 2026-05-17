@@ -9,8 +9,13 @@ import { useStore } from "@/lib/store/use-store";
 import { createBrowserClient } from "@supabase/ssr";
 
 export default function Home() {
-  const { user, setUser, setProjects } = useStore();
+  const { user, setUser, setProjects, activeProjectId, setCurrentPreview, setMessages } = useStore();
   const [authOpen, setAuthOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -48,18 +53,24 @@ export default function Home() {
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
-            setProjects(data.map(p => ({
+            const mappedProjects = data.map(p => ({
               id: p.id,
               name: p.name,
               updatedAt: new Date(p.updated_at),
               data: p.data,
               messages: p.messages
-            })));
+            }));
+            setProjects(mappedProjects);
+            
+            // 为了保持和之前一样的状态，如果服务端返回了项目，并且我们有一个活跃的 id，
+            // 确保相关对话也被加载过来，否则如果没有未保存的草稿，其实 zustand 本地已经有了
           }
         })
         .catch(console.error);
     }
   }, [user, setProjects]);
+
+  if (!isHydrated) return null; // Avoid hydration mismatch for Persist store
 
   return (
     <main className="flex h-screen w-screen overflow-hidden bg-background text-foreground">

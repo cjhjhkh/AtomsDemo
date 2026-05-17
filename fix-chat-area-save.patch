@@ -1,0 +1,37 @@
+--- components/chat/chat-area.tsx
++++ components/chat/chat-area.tsx
+@@ -9,12 +9,13 @@
+ export function ChatArea() {
+-  const { user, messages, addMessage, setIsPreviewLoading, setCurrentPreview, setProjects } = useStore();
++  const { user, messages, addMessage, setIsPreviewLoading, setCurrentPreview, setProjects, activeProjectId, setActiveProject } = useStore();
+   const [input, setInput] = useState('');
+   const [isTyping, setIsTyping] = useState(false);
+ 
+   const supabase = createBrowserClient(
+     process.env.NEXT_PUBLIC_SUPABASE_URL!,
+     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+   );
+ 
+   const saveProjectToDb = async (aiData: any, newMessages: any) => {
+     if (!user) return;
+ 
+     try {
+-      await fetch('/api/save-project', {
++      const res = await fetch('/api/save-project', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+         },
+         body: JSON.stringify({
++          id: activeProjectId,
+           name: aiData.appName || 'Untitled App',
+           data: aiData,
+           messages: newMessages
+         }),
+       });
++      const savedProject = await res.json();
++      if (savedProject && savedProject.id && !activeProjectId) {
++        setActiveProject(savedProject.id);
++      }
+ 
+       // 刷新项目列表

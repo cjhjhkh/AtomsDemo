@@ -91,7 +91,6 @@ export function Sidebar({ onOpenAuth }: { onOpenAuth: () => void }) {
           </div>
         ) : (
           <button 
-            id="auth-trigger"
             onClick={onOpenAuth}
             className="w-full py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:opacity-90 transition-opacity"
           >

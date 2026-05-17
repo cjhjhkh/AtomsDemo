@@ -4,10 +4,9 @@ import React, { useState } from 'react';
 import { useStore } from '@/lib/store/use-store';
 import { Send, Loader2 } from 'lucide-react';
 import { createBrowserClient } from '@supabase/ssr';
-import { toast } from 'sonner';
 
 export function ChatArea() {
-  const { user, messages, addMessage, setIsPreviewLoading, setCurrentPreview, setProjects, activeProjectId, setActiveProject } = useStore();
+  const { user, messages, addMessage, setIsPreviewLoading, setCurrentPreview, setProjects } = useStore();
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
 
@@ -17,28 +16,20 @@ export function ChatArea() {
   );
 
   const saveProjectToDb = async (aiData: any, newMessages: any) => {
-    if (!user) return;
+    if (!user) return; // 只有登录用户才保存
 
     try {
-      const response = await fetch('/api/save-project', {
+      await fetch('/api/save-project', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          id: activeProjectId,
           name: aiData.appName || 'Untitled App',
           data: aiData,
           messages: newMessages
         }),
       });
-
-      const savedProject = await response.json();
-      
-      // 取回 ID 并设置成激活的，如果是第一次创建
-      if (savedProject && savedProject.id && !activeProjectId) {
-        setActiveProject(savedProject.id);
-      }
 
       // 刷新项目列表
       const { data: userProjects } = await supabase
@@ -61,11 +52,6 @@ export function ChatArea() {
   };
 
   const handleSend = async () => {
-    if (!user) {
-      toast.error('登录后即可开始保存你的项目和对话！', { action: { label: '立刻登录', onClick: () => document.getElementById('auth-trigger')?.click() } });
-      return;
-    }
-
     if (!input.trim() || isTyping) return;
     
     const userMsg = {

@@ -1,0 +1,41 @@
+@@ -28,14 +28,29 @@
+ 
+     const body = await req.json();
+-    const { name, data, messages } = body;
++    const { id, name, data, messages } = body;
+ 
+-    const { data: project, error } = await supabase
+-      .from('projects')
+-      .insert({
+-        user_id: session.user.id,
+-        name: name || 'Untitled Project',
+-        data: data || {},
+-        messages: messages || []
+-      })
+-      .select()
+-      .single();
++    let query = supabase.from('projects');
++    let result;
++
++    if (id) {
++      // 如果有 id 表示是更新一个已存在的项
++      result = await query.update({
++          name: name || 'Untitled Project',
++          data: data || {},
++          messages: messages || [],
++          updated_at: new Date().toISOString()
++        })
++        .eq('id', id)
++        .eq('user_id', session.user.id)
++        .select()
++        .single();
++    } else {
++      // 如果没有 id，则是创建新的对话
++      result = await query.insert({
++          user_id: session.user.id,
++          name: name || 'Untitled Project',
++          data: data || {},
++          messages: messages || []
++        })
++        .select()
++        .single();

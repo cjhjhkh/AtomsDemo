@@ -29,24 +29,11 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, name, data, messages } = body;
+    const { name, data, messages } = body;
 
-    let query = supabase.from('projects');
-    let projectResult;
-
-    if (id) {
-      projectResult = await query.update({
-        name: name || 'Untitled Project',
-        data: data || {},
-        messages: messages || [],
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .eq('user_id', session.user.id)
-      .select()
-      .single();
-    } else {
-      projectResult = await query.insert({
+    const { data: project, error } = await supabase
+      .from('projects')
+      .insert({
         user_id: session.user.id,
         name: name || 'Untitled Project',
         data: data || {},
@@ -54,9 +41,6 @@ export async function POST(req: NextRequest) {
       })
       .select()
       .single();
-    }
-
-    const { data: project, error } = projectResult;
 
     if (error) {
       throw error;

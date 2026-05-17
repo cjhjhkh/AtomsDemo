@@ -1,0 +1,12 @@
+--- components/chat/chat-area.tsx
++++ components/chat/chat-area.tsx
+@@ -47,9 +47,15 @@
+           messages: p.messages
+         })));
+       }
+     } catch (e) {
+       console.error('Failed to save project:', e);
+     }
+   };
+ 
+   const handleSend = async () => {

@@ -1,20 +1,70 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '@/lib/store/use-store';
-import { Code2, MonitorPlay, Info, Copy, Check } from 'lucide-react';
+import { Code2, MonitorPlay, Info, Copy, Check, Save, File, Folder } from 'lucide-react';
 
 export function PreviewPanel() {
-  const { currentPreview, isPreviewLoading } = useStore();
+  const { currentPreview, isPreviewLoading, updateCurrentPreviewCode } = useStore();
   const [activeTab, setActiveTab] = useState<'preview' | 'code' | 'info'>('preview');
   const [copied, setCopied] = useState(false);
+  const [activeFile, setActiveFile] = useState<string>('');
+  const [files, setFiles] = useState<Record<string, string>>({});
+  const [editedFiles, setEditedFiles] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (currentPreview) {
+      if (typeof currentPreview.fullCode === 'object' && currentPreview.fullCode !== null) {
+        setFiles(currentPreview.fullCode as Record<string, string>);
+        setEditedFiles(currentPreview.fullCode as Record<string, string>);
+        // 设置默认选中的文件
+        const keys = Object.keys(currentPreview.fullCode);
+        if (keys.length > 0 && !keys.includes(activeFile)) {
+          setActiveFile(keys.includes('index.html') ? 'index.html' : keys[0]);
+        }
+      } else {
+         const code = currentPreview.fullCode || currentPreview.previewHtml || '';
+         setFiles({ 'index.html': code });
+         setEditedFiles({ 'index.html': code });
+         setActiveFile('index.html');
+      }
+    }
+  }, [currentPreview]); // Only re-run when currentPreview object identity changes
 
   const handleCopy = async () => {
-    if (currentPreview?.fullCode) {
-      await navigator.clipboard.writeText(currentPreview.fullCode);
+    if (editableCode) {
+      await navigator.clipboard.writeText(editableCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+  const handleSaveCode = () => {
+    if(!currentPreview) return;
+    
+    // 如果是单文件模式，更新 html；如果是多文件模式，需要合成为一个 HTML 或只保留在 fullCode（简单处理，因为目前 iframe 只支持接收单文件 previewHtml）
+    // 这里简单地把 index.html 贴回 previewHtml 以便可以立刻显示效果，或者我们直接通过回调更新状态。
+    let newPreviewHtml = currentPreview.previewHtml;
+    if (editedFiles['index.html']) {
+        newPreviewHtml = editedFiles['index.html'];
+    }
+
+    useStore.getState().setCurrentPreview({
+        ...currentPreview,
+        previewHtml: newPreviewHtml,
+        fullCode: editedFiles
+    });
+    
+    setActiveTab('preview');
+  };
+
+  const editableCode = editedFiles[activeFile] || '';
+
+  const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setEditedFiles(prev => ({
+        ...prev,
+        [activeFile]: e.target.value
+    }));
   };
 
   return (
@@ -51,13 +101,22 @@ export function PreviewPanel() {
         </div>
         
         {activeTab === 'code' && currentPreview && (
-          <button 
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md text-muted-foreground hover:bg-white/5 hover:text-foreground transition-colors mr-2"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-            {copied ? 'Copied!' : 'Copy Code'}
-          </button>
+          <div className="flex items-center space-x-2 mr-2">
+            <button 
+              onClick={handleSaveCode}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
+            >
+              <Save className="w-3.5 h-3.5" />
+              Apply
+            </button>
+            <button 
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md text-muted-foreground hover:bg-white/5 hover:text-foreground transition-colors"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
         )}
       </div>
 
@@ -78,8 +137,8 @@ export function PreviewPanel() {
             </div>
           </div>
         ) : (
-          <div className="h-full w-full relative">
-            <div className={`h-full w-full ${activeTab === 'preview' ? 'block' : 'hidden'}`}>
+          <div className="h-full w-full relative flex flex-col">
+            <div className={`flex-1 w-full ${activeTab === 'preview' ? 'block' : 'hidden'}`}>
               <iframe
                 title="Preview"
                 srcDoc={currentPreview.previewHtml}
@@ -88,10 +147,34 @@ export function PreviewPanel() {
               />
             </div>
             
-            <div className={`h-full w-full overflow-y-auto ${activeTab === 'code' ? 'block' : 'hidden'}`}>
-              <pre className="p-6 text-sm font-mono text-gray-300 bg-gray-950 min-h-full whitespace-pre-wrap break-all">
-                <code>{currentPreview.fullCode || currentPreview.previewHtml}</code>
-              </pre>
+            <div className={`flex-1 w-full flex ${activeTab === 'code' ? 'flex' : 'hidden'}`}>
+                {/* File Explorer Sidebar */}
+                <div className="w-48 bg-gray-950/50 border-r border-white/5 flex flex-col">
+                    <div className="p-3 text-xs font-semibold text-muted-foreground flex items-center uppercase tracking-wider">
+                        <Folder className="w-3.5 h-3.5 mr-2" />
+                        Files
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                        {Object.keys(editedFiles).map((filename) => (
+                           <button
+                             key={filename}
+                             onClick={() => setActiveFile(filename)}
+                             className={`w-full flex items-center px-4 py-2 text-sm text-left ${activeFile === filename ? 'bg-primary/20 text-primary border-l-2 border-primary' : 'text-gray-400 hover:bg-white/5 hover:text-gray-200 border-l-2 border-transparent'}`}
+                           >
+                             <File className="w-3.5 h-3.5 mr-2 opacity-70" />
+                             <span className="truncate">{filename}</span>
+                           </button> 
+                        ))}
+                    </div>
+                </div>
+
+                {/* Code Editor */}
+              <textarea
+                value={editableCode}
+                onChange={handleCodeChange}
+                className="flex-1 w-full text-sm font-mono text-gray-300 bg-gray-950 p-4 border-none outline-none resize-none"
+                spellCheck="false"
+              />
             </div>
             
             <div className={`h-full w-full overflow-y-auto p-6 space-y-8 ${activeTab === 'info' ? 'block' : 'hidden'}`}>

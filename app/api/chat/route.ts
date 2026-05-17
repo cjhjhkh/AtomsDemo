@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-
-
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.QWEN_API_KEY || '';
@@ -35,7 +33,11 @@ export async function POST(req: NextRequest) {
         "appName": "Name of the app",
         "description": "Short description",
         "previewHtml": "<!DOCTYPE html><html><head><script src='https://cdn.tailwindcss.com'></script></head><body class='bg-gray-900 text-white'>... your code ...</body></html>",
-        "fullCode": "The exact verbatim HTML code again.",
+        "fullCode": {
+          "index.html": "<!DOCTYPE html>...",
+          "styles.css": "body { ... }",
+          "script.js": "console.log('...');"
+        },
         "techStack": ["HTML5", "Tailwind CSS", "JavaScript"],
         "suggestions": ["Suggestion 1", "Suggestion 2"]
       }
@@ -45,6 +47,11 @@ export async function POST(req: NextRequest) {
       - Include Tailwind CSS via https://cdn.tailwindcss.com.
       - Ensure modern, beautiful, and dark-themed UI (compatible with the prompt).
       - Add necessary inline scripts to make the basic interactions work.
+      
+      Important rules for fullCode:
+      - This object will be displayed in a file tree editor, so provide sensible file names as keys (e.g. index.html, styles.css, script.js).
+      - Break down the logic from previewHtml into separate files in this field.
+
       - If the user asks to modify the app, update the code from your previous responses.
     `;
 

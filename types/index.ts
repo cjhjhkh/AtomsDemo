@@ -24,7 +24,7 @@ export interface AIResponsePayload {
   appName: string;
   description: string;
   previewHtml: string;
-  fullCode: string;
+  fullCode: string | Record<string, string>;
   techStack: string[];
   suggestions: string[];
 }

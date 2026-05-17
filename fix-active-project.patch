@@ -1,0 +1,19 @@
+--- atoms-demo/components/chat/chat-area.tsx
++++ atoms-demo/components/chat/chat-area.tsx
+@@ -29,10 +29,15 @@
+       });
+ 
+       const savedProject = await response.json();
+       
+-      // 取回 ID 并设置成激活的，如果是第一次创建
+-      if (savedProject && savedProject.id && !activeProjectId) {
++      // 取回 ID 并设置成激活的，并且手动更新一份到 projects 列表
++      if (savedProject && savedProject.id) {
+         setActiveProject(savedProject.id);
++        const tempProjects = [{
++          id: savedProject.id, name: savedProject.name, updatedAt: new Date(savedProject.updated_at), data: savedProject.data, messages: savedProject.messages
++        }, ...projects.filter(p => p.id !== savedProject.id)];
++        setProjects(tempProjects);
+       }
+ 
+       // 刷新项目列表
